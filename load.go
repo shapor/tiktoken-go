@@ -5,10 +5,6 @@ import (
 	_ "embed"
 	"encoding/gob"
 	"errors"
-	"io/ioutil"
-	"net/http"
-	"os"
-	"strings"
 )
 
 var (
@@ -41,24 +37,6 @@ var (
 
 type BpeLoader interface {
 	LoadTiktokenBpe(tiktokenBpeFile string) (map[string]int, error)
-}
-
-func readFile(blobpath string) ([]byte, error) {
-	if !strings.HasPrefix(blobpath, "http://") && !strings.HasPrefix(blobpath, "https://") {
-		file, err := os.Open(blobpath)
-		if err != nil {
-			return nil, err
-		}
-		defer file.Close()
-		return ioutil.ReadAll(file)
-	}
-	// avoiding blobfile for public files helps avoid auth issues, like MFA prompts
-	resp, err := http.Get(blobpath)
-	if err != nil {
-		return nil, err
-	}
-	defer resp.Body.Close()
-	return ioutil.ReadAll(resp.Body)
 }
 
 type defaultBpeLoader struct{}
