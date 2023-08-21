@@ -83,9 +83,6 @@ var encodingMap map[string]*Encoding
 var l *sync.Mutex
 
 func init() {
-	gob.NewDecoder(bytes.NewReader(cl100k)).Decode(&vocabCL100K)
-	gob.NewDecoder(bytes.NewReader(p50k)).Decode(&vocabP50K)
-	gob.NewDecoder(bytes.NewReader(r50k)).Decode(&vocabR50K)
 	encodingMap = make(map[string]*Encoding)
 	l = &sync.Mutex{}
 }
@@ -113,27 +110,31 @@ func getEncoding(encodingName string) (*Encoding, error) {
 }
 
 func initEncoding(encodingName string) (*Encoding, error) {
-	var encoding *Encoding
-	var err error
 	switch encodingName {
 	case MODEL_CL100K_BASE:
-		encoding, err = cl100k_base()
+		return cl100k_base()
 	case MODEL_P50K_BASE:
-		encoding, err = p50k_base()
+		return p50k_base()
 	case MODEL_R50K_BASE:
-		encoding, err = r50k_base()
+		return r50k_base()
 	case MODEL_P50K_EDIT:
-		encoding, err = p50k_edit()
+		return p50k_edit()
 	default:
 		return nil, errors.New("Unknown encoding: " + encodingName)
 	}
-	if err == nil && len(encoding.MergeableRanks) == 0 {
-		return nil, errors.New("Invalid vocabulary: " + encodingName)
+}
+
+func decodeVocab(blob []byte, vocab *map[string]int) error {
+	if len(*vocab) > 0 {
+		return nil
 	}
-	return encoding, err
+	return gob.NewDecoder(bytes.NewReader(blob)).Decode(vocab)
 }
 
 func cl100k_base() (*Encoding, error) {
+	if err := decodeVocab(cl100k, &vocabCL100K); err != nil {
+		return nil, err
+	}
 	special_tokens := map[string]int{
 		ENDOFTEXT:   100257,
 		FIM_PREFIX:  100258,
@@ -150,6 +151,9 @@ func cl100k_base() (*Encoding, error) {
 }
 
 func p50k_edit() (*Encoding, error) {
+	if err := decodeVocab(p50k, &vocabP50K); err != nil {
+		return nil, err
+	}
 	special_tokens := map[string]int{ENDOFTEXT: 50256, FIM_PREFIX: 50281, FIM_MIDDLE: 50282, FIM_SUFFIX: 50283}
 	return &Encoding{
 		Name:           MODEL_P50K_EDIT,
@@ -160,6 +164,9 @@ func p50k_edit() (*Encoding, error) {
 }
 
 func p50k_base() (*Encoding, error) {
+	if err := decodeVocab(p50k, &vocabP50K); err != nil {
+		return nil, err
+	}
 	special_tokens := map[string]int{ENDOFTEXT: 50256}
 
 	// ExplicitNVocab := 50281
@@ -179,6 +186,9 @@ func p50k_base() (*Encoding, error) {
 }
 
 func r50k_base() (*Encoding, error) {
+	if err := decodeVocab(r50k, &vocabR50K); err != nil {
+		return nil, err
+	}
 	special_tokens := map[string]int{ENDOFTEXT: 50256}
 	return &Encoding{
 		Name:           MODEL_R50K_BASE,
