@@ -9,31 +9,13 @@ import (
 )
 
 var (
+	vocabCL100K, vocabP50K, vocabR50K map[string]int
 	//go:embed cl100k.gob
 	cl100k []byte
 	//go:embed p50k.gob
 	p50k []byte
 	//go:embed r50k.gob
-	r50k         []byte
-	embeddedMaps = func() (s struct {
-		CL100K map[string]int
-		P50K   map[string]int
-		R50K   map[string]int
-	}) {
-		dec := gob.NewDecoder(bytes.NewReader(cl100k))
-		if err := dec.Decode(&s.CL100K); err != nil {
-			panic(err)
-		}
-		dec = gob.NewDecoder(bytes.NewReader(p50k))
-		if err := dec.Decode(&s.P50K); err != nil {
-			panic(err)
-		}
-		dec = gob.NewDecoder(bytes.NewReader(r50k))
-		if err := dec.Decode(&s.R50K); err != nil {
-			panic(err)
-		}
-		return
-	}()
+	r50k []byte
 )
 
 const ENDOFTEXT string = "<|endoftext|>"
@@ -101,6 +83,9 @@ var encodingMap map[string]*Encoding
 var l *sync.Mutex
 
 func init() {
+	gob.NewDecoder(bytes.NewReader(cl100k)).Decode(&vocabCL100K)
+	gob.NewDecoder(bytes.NewReader(p50k)).Decode(&vocabP50K)
+	gob.NewDecoder(bytes.NewReader(r50k)).Decode(&vocabR50K)
 	encodingMap = make(map[string]*Encoding)
 	l = &sync.Mutex{}
 }
@@ -153,7 +138,7 @@ func cl100k_base() (*Encoding, error) {
 	return &Encoding{
 		Name:           MODEL_CL100K_BASE,
 		PatStr:         `(?i:'s|'t|'re|'ve|'m|'ll|'d)|[^\r\n\p{L}\p{N}]?\p{L}+|\p{N}{1,3}| ?[^\s\p{L}\p{N}]+[\r\n]*|\s*[\r\n]+|\s+(?!\S)|\s+`,
-		MergeableRanks: embeddedMaps.CL100K,
+		MergeableRanks: vocabCL100K,
 		SpecialTokens:  special_tokens,
 	}, nil
 }
@@ -163,7 +148,7 @@ func p50k_edit() (*Encoding, error) {
 	return &Encoding{
 		Name:           MODEL_P50K_EDIT,
 		PatStr:         `'s|'t|'re|'ve|'m|'ll|'d| ?\p{L}+| ?\p{N}+| ?[^\s\p{L}\p{N}]+|\s+(?!\S)|\s+`,
-		MergeableRanks: embeddedMaps.P50K,
+		MergeableRanks: vocabP50K,
 		SpecialTokens:  special_tokens,
 	}, nil
 }
@@ -181,7 +166,7 @@ func p50k_base() (*Encoding, error) {
 	return &Encoding{
 		Name:           MODEL_P50K_BASE,
 		PatStr:         `'s|'t|'re|'ve|'m|'ll|'d| ?\p{L}+| ?\p{N}+| ?[^\s\p{L}\p{N}]+|\s+(?!\S)|\s+`,
-		MergeableRanks: embeddedMaps.P50K,
+		MergeableRanks: vocabP50K,
 		SpecialTokens:  special_tokens,
 		ExplicitNVocab: 50281,
 	}, nil
@@ -191,7 +176,7 @@ func r50k_base() (*Encoding, error) {
 	special_tokens := map[string]int{ENDOFTEXT: 50256}
 	return &Encoding{
 		Name:           MODEL_R50K_BASE,
-		MergeableRanks: embeddedMaps.R50K,
+		MergeableRanks: vocabR50K,
 		PatStr:         `'s|'t|'re|'ve|'m|'ll|'d| ?\p{L}+| ?\p{N}+| ?[^\s\p{L}\p{N}]+|\s+(?!\S)|\s+`,
 		SpecialTokens:  special_tokens,
 		ExplicitNVocab: 50257,
