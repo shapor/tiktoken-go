@@ -113,18 +113,24 @@ func getEncoding(encodingName string) (*Encoding, error) {
 }
 
 func initEncoding(encodingName string) (*Encoding, error) {
+	var encoding *Encoding
+	var err error
 	switch encodingName {
 	case MODEL_CL100K_BASE:
-		return cl100k_base()
+		encoding, err = cl100k_base()
 	case MODEL_P50K_BASE:
-		return p50k_base()
+		encoding, err = p50k_base()
 	case MODEL_R50K_BASE:
-		return r50k_base()
+		encoding, err = r50k_base()
 	case MODEL_P50K_EDIT:
-		return p50k_edit()
+		encoding, err = p50k_edit()
 	default:
 		return nil, errors.New("Unknown encoding: " + encodingName)
 	}
+	if err == nil && len(encoding.MergeableRanks) == 0 {
+		return nil, errors.New("Invalid vocabulary: " + encodingName)
+	}
+	return encoding, err
 }
 
 func cl100k_base() (*Encoding, error) {
