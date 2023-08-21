@@ -11,7 +11,7 @@ This is a port of the original [tiktoken](https://github.com/openai/tiktoken).
 ## Install
 
 ```bash
-go get github.com/pkoukk/tiktoken-go
+go get github.com/shapor/tiktoken-go
 ```
 ## Cache
 Tiktoken-go has the same cache mechanism as the original Tiktoken library.  
@@ -34,7 +34,7 @@ The offline BPE loader loads the BPE dictionary from embed files, it helps if yo
 
 Due to the size of the BPE dictionary, this loader is in other project.
 
-Include if you require this loader: [tiktoken_loader](https://github.com/pkoukk/tiktoken-go-loader)
+Include if you require this loader: [tiktoken_loader](https://github.com/shapor/tiktoken-go-loader)
 
 ## Examples
 ### Get Token By Encoding
@@ -44,7 +44,7 @@ package main
 
 import (
     "fmt"
-    "github.com/pkoukk/tiktoken-go"
+    "github.com/shapor/tiktoken-go"
 )
 
 func main()  {
@@ -76,7 +76,7 @@ package main
 
 import (
     "fmt"
-    "github.com/pkoukk/tiktoken-go"
+    "github.com/shapor/tiktoken-go"
 )
 
 func main()  {
@@ -117,7 +117,7 @@ package main
 import (
 	"fmt"
 
-	"github.com/pkoukk/tiktoken-go"
+	"github.com/shapor/tiktoken-go"
 	"github.com/sashabaranov/go-openai"
 )
 
