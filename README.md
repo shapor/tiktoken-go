@@ -1,5 +1,4 @@
 # tiktoken-go
-[简体中文](./README_zh-hans.md)
 
 OpenAI's tiktoken in Go. 
 
