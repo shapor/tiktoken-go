@@ -1,8 +1,21 @@
 package tiktoken
 
 import (
+	"bytes"
+	_ "embed"
+	"encoding/gob"
 	"errors"
 	"sync"
+)
+
+var (
+	vocabCL100K, vocabP50K, vocabR50K map[string]int
+	//go:embed cl100k.gob
+	cl100k []byte
+	//go:embed p50k.gob
+	p50k []byte
+	//go:embed r50k.gob
+	r50k []byte
 )
 
 const ENDOFTEXT string = "<|endoftext|>"
@@ -111,9 +124,15 @@ func initEncoding(encodingName string) (*Encoding, error) {
 	}
 }
 
+func decodeVocab(blob []byte, vocab *map[string]int) error {
+	if len(*vocab) > 0 {
+		return nil
+	}
+	return gob.NewDecoder(bytes.NewReader(blob)).Decode(vocab)
+}
+
 func cl100k_base() (*Encoding, error) {
-	ranks, err := bpeLoader.LoadTiktokenBpe("https://openaipublic.blob.core.windows.net/encodings/cl100k_base.tiktoken")
-	if err != nil {
+	if err := decodeVocab(cl100k, &vocabCL100K); err != nil {
 		return nil, err
 	}
 	special_tokens := map[string]int{
@@ -126,28 +145,26 @@ func cl100k_base() (*Encoding, error) {
 	return &Encoding{
 		Name:           MODEL_CL100K_BASE,
 		PatStr:         `(?i:'s|'t|'re|'ve|'m|'ll|'d)|[^\r\n\p{L}\p{N}]?\p{L}+|\p{N}{1,3}| ?[^\s\p{L}\p{N}]+[\r\n]*|\s*[\r\n]+|\s+(?!\S)|\s+`,
-		MergeableRanks: ranks,
+		MergeableRanks: vocabCL100K,
 		SpecialTokens:  special_tokens,
 	}, nil
 }
 
 func p50k_edit() (*Encoding, error) {
-	ranks, err := bpeLoader.LoadTiktokenBpe("https://openaipublic.blob.core.windows.net/encodings/p50k_base.tiktoken")
-	if err != nil {
+	if err := decodeVocab(p50k, &vocabP50K); err != nil {
 		return nil, err
 	}
 	special_tokens := map[string]int{ENDOFTEXT: 50256, FIM_PREFIX: 50281, FIM_MIDDLE: 50282, FIM_SUFFIX: 50283}
 	return &Encoding{
 		Name:           MODEL_P50K_EDIT,
 		PatStr:         `'s|'t|'re|'ve|'m|'ll|'d| ?\p{L}+| ?\p{N}+| ?[^\s\p{L}\p{N}]+|\s+(?!\S)|\s+`,
-		MergeableRanks: ranks,
+		MergeableRanks: vocabP50K,
 		SpecialTokens:  special_tokens,
 	}, nil
 }
 
 func p50k_base() (*Encoding, error) {
-	ranks, err := bpeLoader.LoadTiktokenBpe("https://openaipublic.blob.core.windows.net/encodings/p50k_base.tiktoken")
-	if err != nil {
+	if err := decodeVocab(p50k, &vocabP50K); err != nil {
 		return nil, err
 	}
 	special_tokens := map[string]int{ENDOFTEXT: 50256}
@@ -162,25 +179,22 @@ func p50k_base() (*Encoding, error) {
 	return &Encoding{
 		Name:           MODEL_P50K_BASE,
 		PatStr:         `'s|'t|'re|'ve|'m|'ll|'d| ?\p{L}+| ?\p{N}+| ?[^\s\p{L}\p{N}]+|\s+(?!\S)|\s+`,
-		MergeableRanks: ranks,
+		MergeableRanks: vocabP50K,
 		SpecialTokens:  special_tokens,
 		ExplicitNVocab: 50281,
 	}, nil
 }
 
 func r50k_base() (*Encoding, error) {
-	ranks, err := bpeLoader.LoadTiktokenBpe("https://openaipublic.blob.core.windows.net/encodings/r50k_base.tiktoken")
-	if err != nil {
+	if err := decodeVocab(r50k, &vocabR50K); err != nil {
 		return nil, err
 	}
 	special_tokens := map[string]int{ENDOFTEXT: 50256}
 	return &Encoding{
 		Name:           MODEL_R50K_BASE,
-		MergeableRanks: ranks,
+		MergeableRanks: vocabR50K,
 		PatStr:         `'s|'t|'re|'ve|'m|'ll|'d| ?\p{L}+| ?\p{N}+| ?[^\s\p{L}\p{N}]+|\s+(?!\S)|\s+`,
 		SpecialTokens:  special_tokens,
 		ExplicitNVocab: 50257,
 	}, nil
 }
-
-// var ENCODING_MAP = map[string]*Encoding{}
